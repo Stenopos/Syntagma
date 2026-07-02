@@ -1,0 +1,4 @@
+# downloaded release binaries
+bin/
+*.tar.gz
+*.zip
