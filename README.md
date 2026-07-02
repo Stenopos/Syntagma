@@ -1,30 +1,10 @@
-```
-                        .=++=+:
-                      :+++=*++=
-                     .++-.:..
-                   .+#*+==-::.
-                 .+#*****++=-.
-                :##***#**++==.
-               :###*****+=-=+
-              :#*##***+===+=.
-              #***==+=+*#+:
-             =#+*+=+%%*-:.
-        ..  .#%@@%@#-....
-       .-+**#@@@%*-.::..
-          -*%%%*=-=+::.
-        :**#-*+-=--*#*=:.
-        .. :++-=-:  :*%*+.
-           =*=-==.    -###*:
-          :%#+@@+     -#%*+=
-          -%@@@+      :**+*-
-           .:.            .
-```
+<p align="center"><img src="assets/full-banner.png" alt="Stenopos" width="600"></p>
 
 # Stenopos
 
 **Memory-safe. Taint-aware. Effect-typed.**
 
-Stenopos is a systems programming language that treats security as a type system property. It combines Python-style readability with Rust-level safety, and adds security dimensions — taint tracking, effect types, constant-time types — that no other systems language builds in from the start.
+Stenopos is a systems programming language that treats security as a type system property. It combines C-style familiarity with Rust-level safety, and adds security dimensions — taint tracking, effect types, constant-time types — that no other systems language builds in from the start.
 
 ---
 
@@ -44,7 +24,7 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 
 ## Features
 
-- **Python-style syntax** — colon-indent blocks, no braces, no semicolons
+- **Brace-based syntax** — C-style `{ }` blocks, no semicolons, newlines as terminators
 - **C-style declarations** — `int32 x = 42`, familiar to systems programmers
 - **Mutable by default** — use `const` for immutability, not `let`/`mut` noise
 - **NOVA memory safety** — automatic `free` at scope end, no GC, no manual memory management
@@ -52,45 +32,25 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 - **Taint tracking** — injection attacks caught at compile time (designed)
 - **Effect types** — `@pure`, `@io`, `@network` annotations enforced by the compiler (designed)
 - **Constant-time types** — `secret[T]` prevents timing leaks (designed)
-- **Generics** — `func identity[T](T val) -> T`, `struct Pair[T, U]`, monomorphization
-- **Traits** — `trait Printable:`, `impl Printable for Point:`, default implementations
-- **Modules** — `module math.vector`, `import math.vector.Vec3`, grouped imports
-- **Error handling** — `try/catch`, `with` resource blocks, `defer`, `?` operator
+- **Generics** — `func identity[T](T val) -> T`, monomorphization
+- **Traits** — `trait Printable { }`, `impl Printable for Point { }`, default implementations
+- **Modules** — `import std.collections.HashMap`, grouped imports
+- **Error handling** — `try/catch/finally`, `defer`, resource management
 - **C FFI** — `extern "C"` for zero-overhead C interop
-- **Inline assembly** — `asm:` blocks with GCC/LLVM constraints
-- **Concurrency** — threads, channels, atomic types, RwLock
-- **Testing** — `@test` attribute, `assert_eq`, fixtures, `stenopos test`
+- **Inline assembly** — `asm { }` blocks with GCC/LLVM constraints
+- **Concurrency** — `spawn`, `chan`, `atomic`, `mutex`, `rwlock`, `spinlock`, `semaphore`
+- **Testing** — `@test` attribute, `assert_eq`, `stenopos test`
 - **Single binary** — one tool: build, run, test, check, format
-
----
-
-## Install
-
-```bash
-curl -fsSL https://stenopos.github.io/install.sh | sh
-```
-
-This installs the `stenopos` binary to `~/.local/bin/`. Add it to your PATH:
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-Verify:
-
-```bash
-stenopos --version
-```
 
 ---
 
 ## Quick start
 
 ```stenopos
-func main() -> int32:
-    str name = "world"
-    printf("Hello, {name}!\n")
+func main() -> int32 {
+    println("Hello, Stenopos!")
     return 0
+}
 ```
 
 ```bash
@@ -103,21 +63,26 @@ stenopos run hello.sten
 
 ```stenopos
 // Fibonacci — iterative
-func fib(int32 n) -> int32:
-    if (n <= 1):
+func fib(int32 n) -> int32 {
+    if (n <= 1) {
         return n
+    }
     int32 a = 0
     int32 b = 1
-    for (i in 2..n):
+    for (i in 2..n) {
         int32 c = a + b
         a = b
         b = c
+    }
     return b
+}
 
-func main() -> int32:
-    for (i in 0..10):
-        printf("fib({i}) = {fib(i)}\n")
+func main() -> int32 {
+    for (i in 0..10) {
+        println("fib(%d) = %d", i, fib(i))
+    }
     return 0
+}
 ```
 
 ---
@@ -136,11 +101,13 @@ str safe = sql_escape(user_input)
 db.query("SELECT * FROM users WHERE name = '{safe}'")           // ok
 
 // Functions declare their effects
-@pure func hash(str data) -> uint64:       // cannot do I/O
+@pure func hash(str data) -> uint64 {       // cannot do I/O
     // ...
+}
 
-@io @network func fetch(str url) -> str:  // must have both permissions
+@io @network func fetch(str url) -> str {   // must have both permissions
     // ...
+}
 ```
 
 ---
@@ -148,9 +115,6 @@ db.query("SELECT * FROM users WHERE name = '{safe}'")           // ok
 ## Documentation
 
 - [stenopos.github.io](https://stenopos.github.io) — full documentation
-- [Getting started](https://stenopos.github.io/getting-started/) — install + hello world
-- [Language guide](https://stenopos.github.io/language-guide/overview/) — full language reference
-- [Security model](https://stenopos.github.io/security/overview/) — taint, effects, constant-time types
 - [Examples](https://github.com/Stenopos/examples) — working programs
 - [Standard library](https://github.com/Stenopos/std) — built-in modules
 
@@ -162,10 +126,16 @@ Stenopos releases follow [semantic versioning](https://semver.org/). Downloads a
 
 | Asset | Description |
 |---|---|
-| `stenopos-x86_64-linux.tar.gz` | Linux x86-64 binary |
-| `stenopos-aarch64-linux.tar.gz` | Linux ARM64 binary |
-| `stenopos-x86_64-macos.tar.gz` | macOS x86-64 binary |
-| `stenopos-aarch64-macos.tar.gz` | macOS ARM64 (Apple Silicon) binary |
+| `stenopos-linux-x86_64` | Linux x86-64 binary |
+| `stenopos-linux-aarch64` | Linux ARM64 binary |
+
+---
+
+## Building from source
+
+Stenopos requires Rust, LLVM (`llc`), and a C compiler (`cc`).
+
+> **Note:** The compiler source is hosted privately. This repository contains release binaries and project documentation. See the [releases page](https://github.com/Stenopos/Syntagma/releases) for downloads.
 
 ---
 
