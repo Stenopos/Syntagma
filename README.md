@@ -59,7 +59,7 @@ target dir with `STENOPOS_INSTALL=$HOME/.local/bin`.
 Prefer to do it by hand? Download `stenopos-linux-<arch>` and `SHA256SUMS` from a
 release, run `sha256sum -c SHA256SUMS`, then move the binary onto your `PATH`.
 
-Stenopos needs `llc` (LLVM) and `cc` (a C compiler) at compile time:
+Stenopos needs `llc` (LLVM 14 or newer) and `cc` (a C compiler) at compile time:
 `sudo apt-get install -y llvm clang` (Debian/Ubuntu) or `brew install llvm` (macOS).
 
 Every published release is proven against a suite of real programs — see the
