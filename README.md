@@ -44,6 +44,28 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 
 ---
 
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Stenopos/Syntagma/main/install.sh | sh
+```
+
+The installer detects your OS/architecture, downloads the matching binary from
+the latest [GitHub Release](https://github.com/Stenopos/Syntagma/releases),
+**verifies its SHA-256 checksum** (and GPG signature when present), and installs
+`stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-alpha.3`, or change the
+target dir with `STENOPOS_INSTALL=$HOME/.local/bin`.
+
+Prefer to do it by hand? Download `stenopos-linux-<arch>` and `SHA256SUMS` from a
+release, run `sha256sum -c SHA256SUMS`, then move the binary onto your `PATH`.
+
+Stenopos needs `llc` (LLVM) and `cc` (a C compiler) at compile time:
+`sudo apt-get install -y llvm clang` (Debian/Ubuntu) or `brew install llvm` (macOS).
+
+Every published release is proven against a suite of real programs — see the
+[example verification runs](https://github.com/Stenopos/examples/actions/workflows/verify.yml)
+([![Verify examples](https://github.com/Stenopos/examples/actions/workflows/verify.yml/badge.svg)](https://github.com/Stenopos/examples/actions/workflows/verify.yml)).
+
 ## Quick start
 
 ```stenopos
@@ -124,26 +146,42 @@ db.query("SELECT * FROM users WHERE name = '{safe}'")           // ok
 
 Stenopos releases follow [semantic versioning](https://semver.org/). Downloads are attached to each [GitHub Release](https://github.com/Stenopos/Syntagma/releases).
 
+Each release also ships a `SHA256SUMS` file (and, when signing is enabled, a
+`SHA256SUMS.asc` GPG signature) so you can verify what you downloaded.
+
 | Asset | Description |
 |---|---|
 | `stenopos-linux-x86_64` | Linux x86-64 binary |
-| `stenopos-linux-aarch64` | Linux ARM64 binary |
+| `stenopos-linux-aarch64` | Linux ARM64 binary (also runs on Raspberry Pi 3/4/5) |
+| `SHA256SUMS` | SHA-256 checksums for the binaries |
+| `SHA256SUMS.asc` | Detached GPG signature of `SHA256SUMS` (when available) |
 
 ---
 
-## Building from source
+## How this project is organized
 
-Stenopos requires Rust, LLVM (`llc`), and a C compiler (`cc`).
+Stenopos is developed privately and distributed publicly. What you see on GitHub
+is everything you need to *use* the language:
 
-> **Note:** The compiler source is hosted privately. This repository contains release binaries and project documentation. See the [releases page](https://github.com/Stenopos/Syntagma/releases) for downloads.
+| Repository | Contents |
+|---|---|
+| [`stenopos`](https://github.com/Stenopos/Syntagma) (this repo) | Release binaries, the installer, project README |
+| [`examples`](https://github.com/Stenopos/examples) | Example programs + a workflow that verifies every release |
+| [`std`](https://github.com/Stenopos/std) | Standard library |
+| [stenopos.github.io](https://stenopos.github.io) | Documentation |
 
----
+The **compiler source is hosted privately** and is not part of this repository —
+its `Code` tab is intentionally limited to the installer and docs. Every release
+is built by CI, checksummed, and verified against the public example suite before
+it ships.
 
 ## License
 
-Licensed under either of:
+The published **binaries, installer, examples, and documentation** are licensed
+under either of:
 
 - [MIT License](LICENSE-MIT)
 - [Apache License, Version 2.0](LICENSE-APACHE)
 
-at your option.
+at your option. (This license covers the distributed artifacts in these public
+repositories; the private compiler source is not distributed under these terms.)
