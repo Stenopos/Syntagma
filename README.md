@@ -36,8 +36,10 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 - **Constant-time types** — `secret[T]` prevents timing leaks (designed)
 - **Generics** — `func identity[T](T val) -> T`, monomorphization
 - **Traits** — `trait Printable { }`, `impl Printable for Point { }`, default implementations
-- **Modules** — `import std.collections.HashMap`, grouped imports
-- **Error handling** — `try/catch/finally`, `defer`, resource management
+- **Modules** — `import std.collections.HashMap`, grouped imports, `pub`/private visibility enforced across modules
+- **Error handling** — `try/catch/finally`, block-scoped `defer`, resource management
+- **Contracts** — `@requires`/`@ensures` pre/postconditions checked at runtime
+- **Built-in tooling** — `stenopos fmt`, `lint`, `doc`, and `test` in the one binary
 - **C FFI** — `extern "C"` for zero-overhead C interop
 - **Inline assembly** — `asm { }` blocks with GCC/LLVM constraints
 - **Concurrency** — `spawn`, `chan`, `atomic`, `mutex`, `rwlock`, `spinlock`, `semaphore`
