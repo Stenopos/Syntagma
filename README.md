@@ -19,6 +19,7 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 | Supply-chain side effects | Effect types — `@pure` functions cannot do I/O |
 | Timing side-channels | `secret[T]` — constant-time operations enforced by the type system |
 | Null pointer dereferences | `T?` nullable types — must be checked before use |
+| Integer overflow → undersized buffers | Checked arithmetic — `+`/`-`/`*` trap on overflow instead of wrapping |
 
 ---
 
@@ -29,6 +30,7 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 - **Mutable by default** — use `const` for immutability, not `let`/`mut` noise
 - **NOVA memory safety** — automatic `free` at scope end, no GC, no manual memory management
 - **Borrow checker** — prevents use-after-move at compile time
+- **Checked integer overflow** — `+`/`-`/`*` trap on overflow instead of wrapping silently; `wrapping_add`/`wrapping_sub`/`wrapping_mul` opt into modular arithmetic
 - **Taint tracking** — injection attacks caught at compile time (designed)
 - **Effect types** — `@pure`, `@io`, `@network` annotations enforced by the compiler (designed)
 - **Constant-time types** — `secret[T]` prevents timing leaks (designed)
