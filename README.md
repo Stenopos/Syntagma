@@ -59,7 +59,7 @@ curl -fsSL https://raw.githubusercontent.com/Stenopos/Syntagma/main/install.sh |
 The installer detects your OS/architecture, downloads the matching binary from
 the latest [GitHub Release](https://github.com/Stenopos/Syntagma/releases),
 **verifies its SHA-256 checksum** (and GPG signature when present), and installs
-`stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-beta.10`, or change the
+`stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-beta.11`, or change the
 target dir with `STENOPOS_INSTALL=$HOME/.local/bin`.
 
 Prefer to do it by hand? Download `stenopos-linux-<arch>` and `SHA256SUMS` from a
