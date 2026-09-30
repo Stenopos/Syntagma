@@ -184,9 +184,12 @@ is everything you need to *use* the language:
 | [stenopos.github.io](https://stenopos.github.io) | Documentation |
 
 The **compiler source is hosted privately** and is not part of this repository —
-its `Code` tab is intentionally limited to the installer and docs. Every release
-is built by CI, checksummed, and verified against the public example suite before
-it ships.
+its `Code` tab is intentionally limited to the installer and docs. **Stenopos is
+self-hosted:** the compiler is written entirely in Stenopos and builds itself, with
+no Rust or other language involved (the transitional Rust bootstrap was removed in
+`v1.0.0-rc.1` — see [the announcement](https://stenopos.github.io/blog/)).
+Every release is built by CI, checksummed, and verified against the public example
+suite before it ships.
 
 ## License
 
