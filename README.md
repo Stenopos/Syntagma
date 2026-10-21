@@ -31,9 +31,9 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 - **NOVA memory safety** — automatic `free` at scope end, no GC, no manual memory management
 - **Borrow checker** — prevents use-after-move at compile time
 - **Checked integer overflow** — `+`/`-`/`*` trap on overflow instead of wrapping silently; `wrapping_add`/`wrapping_sub`/`wrapping_mul` opt into modular arithmetic
-- **Taint tracking** — injection attacks caught at compile time (designed)
-- **Effect types** — `@pure`, `@io`, `@network` annotations enforced by the compiler (designed)
-- **Constant-time types** — `secret[T]` prevents timing leaks (designed)
+- **Taint tracking** — injection attacks caught at compile time: a `@tainted` value cannot reach a `@sink` without passing through a `@sanitizer`
+- **Effect types** — `@pure`, `@io`, `@net` annotations enforced by the compiler; a `@pure` function cannot perform I/O
+- **Constant-time types** — `secret[T]` values are operated on in constant time, preventing timing side-channels
 - **Generics** — `func identity[T](T val) -> T`, monomorphization
 - **Traits** — `trait Printable { }`, `impl Printable for Point { }`, default implementations
 - **Modules** — `import std.collections.HashMap`, grouped imports, `pub`/private visibility enforced across modules
@@ -43,6 +43,9 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 - **C FFI** — `extern "C"` for zero-overhead C interop
 - **Inline assembly** — `asm { }` blocks with GCC/LLVM constraints
 - **Concurrency** — `spawn`, `chan`, `atomic`, `mutex`, `rwlock`, `spinlock`, `semaphore`
+- **Green-thread scheduler** — `spawn` runs cooperative M:N green threads (stackful fibers on a per-CPU worker pool); thousands of channel-blocked Flights ride on a handful of OS threads
+- **Heap-owning channels & locks** — move `str`, structs, `List`, and `HashMap` across `chan[T]` and hold them in `mutex`/`rwlock`, with zero-copy in-place borrows
+- **Language server** — `stenopos lsp` brings live diagnostics, hover, go-to-definition, and completion to any LSP editor
 - **Testing** — `@test` attribute, `assert_eq`, `stenopos test`
 - **Cross-compilation** — `stenopos build --target aarch64` builds for **11 CPU architectures** in one command (x86_64, ARM 32/64, RISC-V, PowerPC 32/64, MIPS BE/LE, s390x) — every word size and byte order
 - **Build profiles** — `stenopos.toml` profiles: `stenopos build` is a fast, debuggable `draft`; `stenopos build --release` is optimized, stripped, and anonymized (reads as a generic C binary)
@@ -59,7 +62,7 @@ curl -fsSL https://raw.githubusercontent.com/Stenopos/Syntagma/main/install.sh |
 The installer detects your OS/architecture, downloads the matching binary from
 the latest [GitHub Release](https://github.com/Stenopos/Syntagma/releases),
 **verifies its SHA-256 checksum** (and GPG signature when present), and installs
-`stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-beta.11`, or change the
+`stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-rc.4`, or change the
 target dir with `STENOPOS_INSTALL=$HOME/.local/bin`.
 
 Prefer to do it by hand? Download `stenopos-linux-<arch>` and `SHA256SUMS` from a
@@ -107,7 +110,7 @@ func fib(int32 n) -> int32 {
 
 func main() -> int32 {
     for (i in 0..10) {
-        println("fib(%d) = %d", i, fib(i))
+        println("fib({i}) = {fib(i)}")
     }
     return 0
 }
@@ -118,22 +121,26 @@ func main() -> int32 {
 ## The security model
 
 ```stenopos
-// Input from the network is tainted
-@tainted str user_input = request.get("name")
+// A function returning untrusted input marks its result @tainted
+@tainted func user_input() -> str {
+    return request.get("name")
+}
 
-// The compiler refuses to let tainted data reach a SQL sink
-// db.query("SELECT * FROM users WHERE name = '{user_input}'")   // compile error
+// A @sink refuses tainted data — enforced at compile time
+@sink func db_query(str sql) -> void { /* ... */ }
 
-// Sanitize it first
-str safe = sql_escape(user_input)
-db.query("SELECT * FROM users WHERE name = '{safe}'")           // ok
+func main() -> void {
+    str q = "SELECT * FROM users WHERE name = '" + user_input() + "'"
+    db_query(q)                          // compile error: tainted value passed to @sink
+    db_query(sql_escape(user_input()))   // ok — sanitized first
+}
 
-// Functions declare their effects
-@pure func hash(str data) -> uint64 {       // cannot do I/O
+// Functions declare their effects; a @pure function cannot do I/O
+@pure func hash(str data) -> uint64 {
     // ...
 }
 
-@io @network func fetch(str url) -> str {   // must have both permissions
+@io @net func fetch(str url) -> str {    // must declare its effects
     // ...
 }
 ```
