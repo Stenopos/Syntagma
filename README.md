@@ -60,20 +60,15 @@ curl -fsSL https://raw.githubusercontent.com/Stenopos/Syntagma/main/install.sh |
 ```
 
 The installer detects your OS/architecture, downloads the matching binary from
-the latest [GitHub Release](https://github.com/Stenopos/Syntagma/releases),
-**verifies its SHA-256 checksum** (and GPG signature when present), and installs
-`stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-rc.4`, or change the
+the newest [GitHub Release](https://github.com/Stenopos/Syntagma/releases),
+**verifies the release signature** against the pinned Stenopos release key and
+the binary's **SHA-256 checksum**, and installs `stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-rc.4`, or change the
 target dir with `STENOPOS_INSTALL=$HOME/.local/bin`.
 
-Prefer to do it by hand? Download `stenopos-linux-<arch>` and `SHA256SUMS` from a
-release, run `sha256sum -c SHA256SUMS`, then move the binary onto your `PATH`.
+Prefer to do it by hand? See [Verify a download](#verify-a-download).
 
 Stenopos needs `llc` (LLVM 14 or newer) and `cc` (a C compiler) at compile time:
 `sudo apt-get install -y llvm clang` (Debian/Ubuntu) or `brew install llvm` (macOS).
-
-Every published release is proven against a suite of real programs — see the
-[example verification runs](https://github.com/Stenopos/examples/actions/workflows/verify.yml)
-([![Verify examples](https://github.com/Stenopos/examples/actions/workflows/verify.yml/badge.svg)](https://github.com/Stenopos/examples/actions/workflows/verify.yml)).
 
 ## Quick start
 
@@ -159,8 +154,8 @@ func main() -> void {
 
 Stenopos releases follow [semantic versioning](https://semver.org/). Downloads are attached to each [GitHub Release](https://github.com/Stenopos/Syntagma/releases).
 
-Each release also ships a `SHA256SUMS` file (and, when signing is enabled, a
-`SHA256SUMS.asc` GPG signature) so you can verify what you downloaded.
+Every file in a release is signed: each asset has a detached `.asc` signature,
+and `SHA256SUMS` lists every asset's checksum and is itself signed.
 
 | Asset | Description |
 |---|---|
@@ -171,10 +166,28 @@ Each release also ships a `SHA256SUMS` file (and, when signing is enabled, a
 | `stenopos-linux-armv7` | Linux 32-bit ARM (hard-float) binary |
 | `stenopos-linux-s390x` | Linux 64-bit IBM Z (big-endian) binary |
 | `SHA256SUMS` | SHA-256 checksums for the binaries |
-| `SHA256SUMS.asc` | Detached GPG signature of `SHA256SUMS` (when available) |
+| `SHA256SUMS.asc` | Signature of `SHA256SUMS` |
+| `<asset>.asc` | Signature of each individual asset |
 
 Any of these can additionally **cross-compile** your programs to eleven CPU
 architectures via `stenopos build --target <arch>`.
+
+### Verify a download
+
+Releases are signed by the **Stenopos Release Signing** key:
+
+```
+21CB C7C3 F66D FAFD D038  5515 E5FB D284 8395 1BCB
+```
+
+The public key is [`stenopos-signing-key.asc`](stenopos-signing-key.asc) in this
+repository and on [keys.openpgp.org](https://keys.openpgp.org/search?q=21CBC7C3F66DFAFDD0385515E5FBD28483951BCB).
+
+```bash
+gpg --import stenopos-signing-key.asc          # or: gpg --recv-keys 21CBC7C3F66DFAFDD0385515E5FBD28483951BCB
+gpg --verify SHA256SUMS.asc SHA256SUMS         # must report the fingerprint above
+sha256sum -c --ignore-missing SHA256SUMS       # checks the files you downloaded
+```
 
 ---
 
@@ -185,8 +198,8 @@ is everything you need to *use* the language:
 
 | Repository | Contents |
 |---|---|
-| [`stenopos`](https://github.com/Stenopos/Syntagma) (this repo) | Release binaries, the installer, project README |
-| [`examples`](https://github.com/Stenopos/examples) | Example programs + a workflow that verifies every release |
+| [`Syntagma`](https://github.com/Stenopos/Syntagma) (this repo) | Release binaries, the installer, the release key, project README |
+| [`examples`](https://github.com/Stenopos/examples) | Example programs |
 | [`std`](https://github.com/Stenopos/std) | Standard library |
 | [stenopos.github.io](https://stenopos.github.io) | Documentation |
 
