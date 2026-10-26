@@ -43,7 +43,7 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 - **C FFI** — `extern "C"` for zero-overhead C interop
 - **Inline assembly** — `asm { }` blocks with GCC/LLVM constraints
 - **Concurrency** — `spawn`, `chan`, `atomic`, `mutex`, `rwlock`, `spinlock`, `semaphore`
-- **Green-thread scheduler** — `spawn` runs cooperative M:N green threads (stackful fibers on a per-CPU worker pool); thousands of channel-blocked Flights ride on a handful of OS threads
+- **Green-thread scheduler** — `spawn` runs cooperative M:N green threads (stackful fibers on a per-CPU worker pool); thousands of channel-blocked Hemerodromes ride on a handful of OS threads
 - **Heap-owning channels & locks** — move `str`, structs, `List`, and `HashMap` across `chan[T]` and hold them in `mutex`/`rwlock`, with zero-copy in-place borrows
 - **Language server** — `stenopos lsp` brings live diagnostics, hover, go-to-definition, and completion to any LSP editor
 - **Testing** — `@test` attribute, `assert_eq`, `stenopos test`
