@@ -1,16 +1,17 @@
 #!/bin/sh
 #
-# Stenopos installer. Downloads the right release binary from GitHub, verifies
-# the release signature against the pinned Stenopos release key and the
-# binary's SHA-256, and installs it.
+# Stenopos installer. Downloads the Syntagma toolchain from GitHub (stenopos,
+# tagma, the runtime and the standard library), verifies the release signature
+# against the pinned Stenopos release key and the SHA-256, and installs it.
 #
 #   curl -fsSL https://raw.githubusercontent.com/Stenopos/Syntagma/main/install.sh | sh
 #
 # Environment overrides:
 #   STENOPOS_VERSION   release tag to install (default: the newest release,
 #                     release candidates included)
-#   STENOPOS_INSTALL   install directory (default: /usr/local/bin, or ~/.local/bin
-#                     if that is not writable)
+#   STENOPOS_INSTALL   directory for the commands (default: /usr/local/bin, or
+#                     ~/.local/bin if that is not writable); the runtime and std
+#                     go in ../lib/stenopos beside it
 #   STENOPOS_REQUIRE_SIGNATURE=1   fail instead of warning when gpg is missing
 #
 # POSIX sh, no bashisms — works under dash/ash/busybox.
@@ -64,9 +65,15 @@ base="https://github.com/${REPO}/releases/download/${VERSION}"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-# --- download binary, checksums and signature ------------------------------
-dl "${base}/${asset}"       "${tmp}/${asset}"      || err "download failed: ${asset}"
+# --- download the toolchain, checksums and signature -------------------------
+# Releases from rc.5 on ship one bundle (stenopos, tagma, runtime, std); older
+# releases only the stenopos binary.
+bundle="syntagma-${VERSION#v}-${os}-${arch}.tar.gz"
 dl "${base}/SHA256SUMS"     "${tmp}/SHA256SUMS"    || err "download failed: SHA256SUMS"
+if grep -q " ${bundle}\$" "${tmp}/SHA256SUMS"; then
+  asset="$bundle"
+fi
+dl "${base}/${asset}"       "${tmp}/${asset}"      || err "download failed: ${asset}"
 dl "${base}/SHA256SUMS.asc" "${tmp}/SHA256SUMS.asc" || err "download failed: SHA256SUMS.asc"
 
 # --- verify the signature against the pinned release key -------------------
@@ -128,15 +135,29 @@ else
 fi
 
 # --- install ---------------------------------------------------------------
-${SUDO} install -m 0755 "${tmp}/${asset}" "${dest}/stenopos" \
-  || err "could not install to ${dest} (try STENOPOS_INSTALL=\$HOME/.local/bin)"
-
-info ""
-info "Stenopos ${VERSION} installed to ${dest}/stenopos"
+if [ "$asset" = "$bundle" ]; then
+  mkdir -p "${tmp}/x" && tar -xzf "${tmp}/${asset}" -C "${tmp}/x" || err "could not unpack ${asset}"
+  top="${tmp}/x/syntagma-${VERSION#v}-${os}-${arch}"
+  lib="$(dirname "$dest")/lib/stenopos"
+  ${SUDO} mkdir -p "$lib" || err "could not create ${lib}"
+  ${SUDO} rm -rf "${lib}/std" "${lib}/stenopos_runtime.c"
+  ${SUDO} cp -R "${top}/lib/stenopos/." "$lib/" || err "could not install to ${lib}"
+  for cmd in stenopos tagma; do
+    ${SUDO} install -m 0755 "${top}/bin/${cmd}" "${dest}/${cmd}" \
+      || err "could not install to ${dest} (try STENOPOS_INSTALL=\$HOME/.local/bin)"
+  done
+  info ""
+  info "Syntagma ${VERSION} installed: ${dest}/tagma, ${dest}/stenopos (runtime and std in ${lib})"
+else
+  ${SUDO} install -m 0755 "${tmp}/${asset}" "${dest}/stenopos" \
+    || err "could not install to ${dest} (try STENOPOS_INSTALL=\$HOME/.local/bin)"
+  info ""
+  info "Stenopos ${VERSION} installed to ${dest}/stenopos"
+fi
 if have stenopos && [ "$(command -v stenopos)" = "${dest}/stenopos" ]; then
   stenopos version 2>/dev/null | tail -1 >&2 || true
 else
-  info "Add ${dest} to your PATH, then run: stenopos version"
+  info "Add ${dest} to your PATH, then run: tagma new hello && cd hello && tagma run"
 fi
 info ""
 info "Stenopos needs 'llc' (LLVM 14 or newer) and 'cc' (a C compiler) at compile time."

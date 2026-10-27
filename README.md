@@ -39,17 +39,17 @@ Most security bugs fall into a handful of known categories. Stenopos prevents th
 - **Modules** — `import std.collections.HashMap`, grouped imports, `pub`/private visibility enforced across modules
 - **Error handling** — `try/catch/finally`, block-scoped `defer`, resource management
 - **Contracts** — `@requires`/`@ensures` pre/postconditions checked at runtime
-- **Built-in tooling** — `stenopos fmt`, `lint`, `doc`, and `test` in the one binary
+- **`tagma`, the build tool** — `tagma new`, `build`, `run`, `test`, `check`, `fmt`, `lint`, `doc` for projects with a `Tagma.toml`; the compiler, `stenopos`, still builds single files
 - **C FFI** — `extern "C"` for zero-overhead C interop
 - **Inline assembly** — `asm { }` blocks with GCC/LLVM constraints
 - **Concurrency** — `spawn`, `chan`, `atomic`, `mutex`, `rwlock`, `spinlock`, `semaphore`
 - **Green-thread scheduler** — `spawn` runs cooperative M:N green threads (stackful fibers on a per-CPU worker pool); thousands of channel-blocked Hemerodromes ride on a handful of OS threads
 - **Heap-owning channels & locks** — move `str`, structs, `List`, and `HashMap` across `chan[T]` and hold them in `mutex`/`rwlock`, with zero-copy in-place borrows
 - **Language server** — `stenopos lsp` brings live diagnostics, hover, go-to-definition, and completion to any LSP editor
-- **Testing** — `@test` attribute, `assert_eq`, `stenopos test`
+- **Testing** — `@test` attribute, `assert_eq`, `tagma test`
 - **Cross-compilation** — `stenopos build --target aarch64` builds for **11 CPU architectures** in one command (x86_64, ARM 32/64, RISC-V, PowerPC 32/64, MIPS BE/LE, s390x) — every word size and byte order
-- **Build profiles** — `stenopos.toml` profiles: `stenopos build` is a fast, debuggable `draft`; `stenopos build --release` is optimized, stripped, and anonymized (reads as a generic C binary)
-- **Single binary** — one tool: build, run, test, check, format
+- **Build profiles** — `tagma build` is a fast, debuggable `draft`; `tagma build --release` is optimized, stripped, and anonymized (reads as a generic C binary)
+- **Editions** — the language evolves through editions (`edition = "2026"`), so a new compiler never breaks an existing project
 
 ---
 
@@ -62,7 +62,8 @@ curl -fsSL https://raw.githubusercontent.com/Stenopos/Syntagma/main/install.sh |
 The installer detects your OS/architecture, downloads the matching binary from
 the newest [GitHub Release](https://github.com/Stenopos/Syntagma/releases),
 **verifies the release signature** against the pinned Stenopos release key and
-the binary's **SHA-256 checksum**, and installs `stenopos`. Pin a version with `STENOPOS_VERSION=v1.0.0-rc.4`, or change the
+the bundle's **SHA-256 checksum**, and installs Syntagma: the `tagma` build
+tool, the `stenopos` compiler, the runtime and the standard library. Pin a version with `STENOPOS_VERSION=v1.0.0-rc.4`, or change the
 target dir with `STENOPOS_INSTALL=$HOME/.local/bin`.
 
 Prefer to do it by hand? See [Verify a download](#verify-a-download).
@@ -71,6 +72,26 @@ Stenopos needs `llc` (LLVM 14 or newer) and `cc` (a C compiler) at compile time:
 `sudo apt-get install -y llvm clang` (Debian/Ubuntu) or `brew install llvm` (macOS).
 
 ## Quick start
+
+```bash
+tagma new hello
+cd hello
+tagma run          # Hello from hello!
+```
+
+`tagma new` writes a `Tagma.toml` and `src/main.sten`:
+
+```toml
+[package]
+name = "hello"
+version = "0.1.0"
+edition = "2026"
+
+[dependencies]
+util = { path = "../util" }   # local path dependencies; the package registry is coming
+```
+
+For a single file there is no project needed:
 
 ```stenopos
 func main() -> int32 {
@@ -82,6 +103,16 @@ func main() -> int32 {
 ```bash
 stenopos run hello.sten
 ```
+
+### Syntagma, tagma and stenopos
+
+| Name | What it is |
+|---|---|
+| **Syntagma** | The toolchain: what you install and what each release ships |
+| **`tagma`** | The build tool you use day to day, for projects |
+| **`stenopos`** | The compiler (also the language server); builds single files |
+
+All three share one version.
 
 ---
 
@@ -159,6 +190,8 @@ and `SHA256SUMS` lists every asset's checksum and is itself signed.
 
 | Asset | Description |
 |---|---|
+| `syntagma-<version>-linux-<arch>.tar.gz` | The toolchain bundle (`tagma`, `stenopos`, runtime, std) for each architecture below; what the installer installs |
+| `tagma-linux-<arch>` | The build tool on its own |
 | `stenopos-linux-x86_64` | Linux x86-64 binary |
 | `stenopos-linux-aarch64` | Linux ARM64 binary (also runs on Raspberry Pi 3/4/5) |
 | `stenopos-linux-ppc64le` | Linux 64-bit PowerPC (little-endian) binary |
