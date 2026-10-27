@@ -63,7 +63,7 @@ The installer detects your OS/architecture, downloads the matching binary from
 the newest [GitHub Release](https://github.com/Stenopos/Syntagma/releases),
 **verifies the release signature** against the pinned Stenopos release key and
 the bundle's **SHA-256 checksum**, and installs Syntagma: the `tagma` build
-tool, the `stenopos` compiler, the runtime and the standard library. Pin a version with `STENOPOS_VERSION=v1.0.0-rc.4`, or change the
+tool, the `stenopos` compiler, the runtime and the standard library. Pin a version with `STENOPOS_VERSION=v1.0.0-rc.5`, or change the
 target dir with `STENOPOS_INSTALL=$HOME/.local/bin`.
 
 Prefer to do it by hand? See [Verify a download](#verify-a-download).
