@@ -146,8 +146,31 @@ if [ "$asset" = "$bundle" ]; then
     ${SUDO} install -m 0755 "${top}/bin/${cmd}" "${dest}/${cmd}" \
       || err "could not install to ${dest} (try STENOPOS_INSTALL=\$HOME/.local/bin)"
   done
+  # Tab completion for both commands, where each shell looks under the
+  # prefix (bash-completion, zsh's site-functions, fish's vendor
+  # completions). Releases before `completions` existed skip this.
+  share="$(dirname "$dest")/share"
+  done_shells=""
+  for sh in bash zsh fish; do
+    ok=1
+    for cmd in stenopos tagma; do
+      case "$sh" in
+        bash) to="${share}/bash-completion/completions/${cmd}" ;;
+        zsh)  to="${share}/zsh/site-functions/_${cmd}" ;;
+        fish) to="${share}/fish/vendor_completions.d/${cmd}.fish" ;;
+      esac
+      "${dest}/${cmd}" completions "$sh" > "${tmp}/completion" 2>/dev/null \
+        && ${SUDO} mkdir -p "$(dirname "$to")" 2>/dev/null \
+        && ${SUDO} install -m 0644 "${tmp}/completion" "$to" 2>/dev/null \
+        || ok=0
+    done
+    [ "$ok" = 1 ] && done_shells="${done_shells} ${sh}"
+  done
   info ""
   info "Syntagma ${VERSION} installed: ${dest}/tagma, ${dest}/stenopos (runtime and std in ${lib})"
+  if [ -n "$done_shells" ]; then
+    info "Tab completion for stenopos and tagma:${done_shells} (in ${share}; \`tagma completions\` shows how to load it by hand)"
+  fi
 else
   ${SUDO} install -m 0755 "${tmp}/${asset}" "${dest}/stenopos" \
     || err "could not install to ${dest} (try STENOPOS_INSTALL=\$HOME/.local/bin)"
